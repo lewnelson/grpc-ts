@@ -1,4 +1,4 @@
-import { Command } from "commander";
+import type { Command } from "commander";
 import mkdirp from "mkdirp";
 import execa from "execa";
 import { basename, extname, join, resolve } from "path";
@@ -156,6 +156,7 @@ const onGenerate = async ({
 }: GenerateOptions): Promise<void> => {
   const inputFiles = await getInputFiles({ input, recursive });
   const rootDirectory = await getRootDirectory();
+  let failed = false;
   await Promise.all(
     inputFiles.map(async (inputFile) => {
       try {
@@ -163,10 +164,15 @@ const onGenerate = async ({
         await generateClient({ inputFile, destination });
         console.log(`Successfully generated output for: ${inputFile.path}`);
       } catch (error) {
+        failed = true;
         console.log(`Failed to generate output for: ${inputFile.path}`);
       }
     })
   );
+
+  if (failed) {
+    process.exit(1);
+  }
 };
 
 export const register = (program: Command): void => {
